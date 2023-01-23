@@ -1,0 +1,260 @@
+$date
+	Sun Jan 22 15:08:16 2023
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	100ps
+$end
+$scope module alu_tb $end
+$var wire 1 ! LT $end
+$var wire 1 " NE $end
+$var wire 1 # OVF $end
+$var wire 32 $ Res [31:0] $end
+$var reg 32 % A [31:0] $end
+$var reg 5 & ALU_OP [4:0] $end
+$var reg 32 ' B [31:0] $end
+$var reg 1 ( ExpLT $end
+$var reg 1 ) ExpNE $end
+$var reg 1 * ExpOVF $end
+$var reg 32 + ExpRes [31:0] $end
+$var reg 5 , Shift_Amt [4:0] $end
+$var reg 128 - actFileName [127:0] $end
+$var reg 128 . diffFileName [127:0] $end
+$var reg 128 / expFileName [127:0] $end
+$var reg 128 0 testName [127:0] $end
+$var integer 32 1 actFile [31:0] $end
+$var integer 32 2 diffFile [31:0] $end
+$var integer 32 3 errors [31:0] $end
+$var integer 32 4 expFile [31:0] $end
+$var integer 32 5 expScan [31:0] $end
+$var integer 32 6 tests [31:0] $end
+$scope module Tester $end
+$var wire 32 7 add_result [31:0] $end
+$var wire 5 8 ctrl_ALUopcode [4:0] $end
+$var wire 5 9 ctrl_shiftamt [4:0] $end
+$var wire 32 : data_operandA [31:0] $end
+$var wire 32 ; data_operandB [31:0] $end
+$var wire 1 ! isLessThan $end
+$var wire 1 " isNotEqual $end
+$var wire 32 < or_result [31:0] $end
+$var wire 1 # overflow $end
+$var wire 32 = sll_result [31:0] $end
+$var wire 32 > sra_result [31:0] $end
+$var wire 32 ? sub_result [31:0] $end
+$var wire 32 @ w7 [31:0] $end
+$var wire 32 A w8 [31:0] $end
+$var wire 32 B data_result [31:0] $end
+$var wire 32 C and_result [31:0] $end
+$scope module and_op $end
+$var wire 32 D data_operandA [31:0] $end
+$var wire 32 E data_operandB [31:0] $end
+$var wire 32 F data_result [31:0] $end
+$upscope $end
+$scope module choose_op $end
+$var wire 32 G in0 [31:0] $end
+$var wire 32 H in1 [31:0] $end
+$var wire 32 I in2 [31:0] $end
+$var wire 32 J in3 [31:0] $end
+$var wire 32 K in4 [31:0] $end
+$var wire 32 L in5 [31:0] $end
+$var wire 32 M in6 [31:0] $end
+$var wire 32 N in7 [31:0] $end
+$var wire 3 O select [2:0] $end
+$var wire 32 P w2 [31:0] $end
+$var wire 32 Q w1 [31:0] $end
+$var wire 32 R out [31:0] $end
+$scope module mux1 $end
+$var wire 32 S in0 [31:0] $end
+$var wire 32 T in1 [31:0] $end
+$var wire 32 U in2 [31:0] $end
+$var wire 32 V in3 [31:0] $end
+$var wire 2 W select [1:0] $end
+$var wire 32 X w2 [31:0] $end
+$var wire 32 Y w1 [31:0] $end
+$var wire 32 Z out [31:0] $end
+$scope module first_bottom $end
+$var wire 32 [ in0 [31:0] $end
+$var wire 32 \ in1 [31:0] $end
+$var wire 1 ] select $end
+$var wire 32 ^ out [31:0] $end
+$upscope $end
+$scope module first_top $end
+$var wire 32 _ in0 [31:0] $end
+$var wire 32 ` in1 [31:0] $end
+$var wire 1 a select $end
+$var wire 32 b out [31:0] $end
+$upscope $end
+$scope module second $end
+$var wire 32 c in0 [31:0] $end
+$var wire 32 d in1 [31:0] $end
+$var wire 1 e select $end
+$var wire 32 f out [31:0] $end
+$upscope $end
+$upscope $end
+$scope module mux2 $end
+$var wire 32 g in0 [31:0] $end
+$var wire 32 h in1 [31:0] $end
+$var wire 32 i in2 [31:0] $end
+$var wire 32 j in3 [31:0] $end
+$var wire 2 k select [1:0] $end
+$var wire 32 l w2 [31:0] $end
+$var wire 32 m w1 [31:0] $end
+$var wire 32 n out [31:0] $end
+$scope module first_bottom $end
+$var wire 32 o in0 [31:0] $end
+$var wire 32 p in1 [31:0] $end
+$var wire 1 q select $end
+$var wire 32 r out [31:0] $end
+$upscope $end
+$scope module first_top $end
+$var wire 32 s in0 [31:0] $end
+$var wire 32 t in1 [31:0] $end
+$var wire 1 u select $end
+$var wire 32 v out [31:0] $end
+$upscope $end
+$scope module second $end
+$var wire 32 w in0 [31:0] $end
+$var wire 32 x in1 [31:0] $end
+$var wire 1 y select $end
+$var wire 32 z out [31:0] $end
+$upscope $end
+$upscope $end
+$scope module mux3 $end
+$var wire 32 { in0 [31:0] $end
+$var wire 32 | in1 [31:0] $end
+$var wire 1 } select $end
+$var wire 32 ~ out [31:0] $end
+$upscope $end
+$upscope $end
+$upscope $end
+$upscope $end
+$scope module alu_tb $end
+$scope module Tester $end
+$scope module and_op $end
+$upscope $end
+$scope module choose_op $end
+$scope module mux1 $end
+$scope module first_bottom $end
+$upscope $end
+$scope module first_top $end
+$upscope $end
+$scope module second $end
+$upscope $end
+$upscope $end
+$scope module mux2 $end
+$scope module first_bottom $end
+$upscope $end
+$scope module first_top $end
+$upscope $end
+$scope module second $end
+$upscope $end
+$upscope $end
+$scope module mux3 $end
+$upscope $end
+$upscope $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+b101100 ~
+0}
+bz |
+b101100 {
+bz z
+1y
+bz x
+bz w
+bz v
+0u
+bz t
+bz s
+bz r
+0q
+bz p
+bz o
+bz n
+bz m
+bz l
+b10 k
+bz j
+bz i
+bz h
+bz g
+b101100 f
+1e
+b101100 d
+bz c
+bz b
+0a
+bz `
+bz _
+b101100 ^
+0]
+bz \
+b101100 [
+b101100 Z
+bz Y
+b101100 X
+b10 W
+bz V
+b101100 U
+bz T
+bz S
+b101100 R
+b101100 Q
+bz P
+b10 O
+bz N
+bz M
+bz L
+bz K
+bz J
+b101100 I
+bz H
+bz G
+b101100 F
+b111110 E
+b101100 D
+b101100 C
+b101100 B
+bz A
+bz @
+bz ?
+bz >
+bz =
+bz <
+b111110 ;
+b101100 :
+b0 9
+b10 8
+bz 7
+b0 6
+b1000 5
+b10000000000000000000000000000011 4
+b0 3
+b10000000000000000000000000000101 2
+b10000000000000000000000000000100 1
+b11000010110111001100100 0
+b110000101101110011001000101111101100101011110000111000000101110011000110111001101110110 /
+b11000010110111001100100010111110110010001101001011001100110011000101110011000110111001101110110 .
+b110000101101110011001000101111101100001011000110111010001110101011000010110110000101110011000110111001101110110 -
+b0 ,
+b101100 +
+0*
+0)
+0(
+b111110 '
+b10 &
+b101100 %
+b101100 $
+z#
+z"
+z!
+$end
+#100
+b11111111111111111111111111111111 5
+b1 6
+#1100
