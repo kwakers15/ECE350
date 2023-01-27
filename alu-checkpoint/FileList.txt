@@ -20,3 +20,5 @@ sra/sra_4.v
 sra/sra_8.v
 sra/sra_16.v
 sra/sra_32.v
+add/cla_32.v
+not/not_32.v
