@@ -1,6 +1,7 @@
 # ALU
 ## Name
-
+Minjun Kwak
 ## Description of Design
-
+At the highest level of my ALU, there are 6 major sub-components that do most of the work: a CLA, a 32-bit AND component, a 32-bit OR component, a logical left-shifting barrel shifter, an arithmetic right-shifting barrel shifter, and an 8-input MUX that determines which calculation will be routed to the output of the ALU based on the ctrl_ALUopcode input. The CLA component takes in a Cin and two data_operands as inputs, and their values are determined by whether the opcode denotes an add operation or a subtract operation using the ternary operator. For the add case, the two inputs are passed in unchanged with the Cin set to 0. For the subtract case, input B is first put through a 32-bit NOT component, and Cin is set to 1, which accounts for switching signs in 2's complement. The 32-bit CLA is constructed with four 8-bit blocks, which allow carry bits c8, c16, c24, and c32 to be determined in shorter gate delays than if each carry were rippled through one by one like with the ripple carry adder, and this is achieved through substituting expressions for previous carry bits in a recursive manner. The sum bits are still calculated with 3-input XOR gates. The 32-bit AND and OR components are made with 32 individual 1-bit gates for each bit of the input. The 32-bit barrel shifters are constructed by creating subcomponents of a 1-bit, 2-bit, 4-bit, 8-bit, and 16-bit shifter using the ternary operator for each bit, and then combining them by turning specific shifters on/off depending on the shift amount input to the 32-bit barrel shifter. Finally, each output (AND, OR, SLL, SRA, ADD, SUB) is computed regardless of the opcode input, and then the desired result is routed to the output using an 8-input MUX, which includes 2 unused extra inputs as there are only 6 possible opcodes.
 ## Bugs
+No bugs detected.
