@@ -1,0 +1,12 @@
+sll/sll_1.v
+sll/sll_2.v
+sll/sll_4.v
+sll/sll_8.v
+sll/sll_16.v
+sll/sll_32.v
+decoder32.v
+dffe_ref.v
+regfile_tb.v
+regfile.v
+register32.v
+tri_state_buffer32.v
