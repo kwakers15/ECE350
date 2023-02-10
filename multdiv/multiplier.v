@@ -5735,18 +5735,16 @@ cla_32 msb_cla(msb_data_result, msb_cout, msb_data_operandA, msb_data_operandB, 
 
 // Check for overflow by checking whether all msb 33 bits are the same
 wire or_result, is_positive, ovf;
-
 or or_overflow(or_result, msb_data_result[31], msb_data_result[30], msb_data_result[29], msb_data_result[28], msb_data_result[27], msb_data_result[26], msb_data_result[25], msb_data_result[24], msb_data_result[23], msb_data_result[22], msb_data_result[21], msb_data_result[20], msb_data_result[19], msb_data_result[18], msb_data_result[17], msb_data_result[16], msb_data_result[15], msb_data_result[14], msb_data_result[13], msb_data_result[12], msb_data_result[11], msb_data_result[10], msb_data_result[9], msb_data_result[8], msb_data_result[7], msb_data_result[6], msb_data_result[5], msb_data_result[4], msb_data_result[3], msb_data_result[2], msb_data_result[1], msb_data_result[0]);
 
 xnor isPositive(is_positive, data_operandA[31], data_operandB[31]);
 
-and ovf_and(ovf, is_positive, temp_result[31]); 
-
-or exception(data_exception, or_result, ovf);
+and ovf_and(ovf, is_positive, temp_result[31]);
+or exception(data_exception, ovf, or_result);
 
 // ------------------------------------------------------------
 
-// flip back if xor(flipA, flipB) == 1
+// flip back if xor(data_operandA[31], data_operandB[31]) == 1
 wire [31:0] flipped_result;
 wire flipped_cout;
 

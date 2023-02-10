@@ -8,23 +8,19 @@ f.write("assign data_resultRDY = 1'b1;\n\n")
 
 f.write("// flip the sign if negative\n")
 
-f.write("wire flipA, flipB;\n")
+f.write("wire [31:0] maybe_flipped_A, maybe_flipped_B;\n")
 
-f.write("assign flipA = data_operandA[31] ? 1'b1 : 1'b0;\n")
+f.write("assign maybe_flipped_A = data_operandA[31] ? ~data_operandA : data_operandA;\n")
 
-f.write("assign flipB = data_operandB[31] ? 1'b1 : 1'b0;\n")
-
-f.write("assign data_operandA = flipA ? ~data_operandA : data_operandA;\n")
-
-f.write("assign data_operandB = flipB ? ~data_operandB : data_operandB;\n")
+f.write("assign maybe_flipped_B = data_operandB[31] ? ~data_operandB : data_operandB;\n")
 
 f.write("wire [31:0] data_operandA_result, data_operandB_result;\n")
 
 f.write("wire a_cout, b_cout;\n")
 
-f.write("cla_32 a_result(data_operandA_result, a_cout, data_operandA, {32{1\'b0}}, flipA);\n")
+f.write("cla_32 a_result(data_operandA_result, a_cout, maybe_flipped_A, {32{1\'b0}}, data_operandA[31]);\n")
 
-f.write("cla_32 b_result(data_operandB_result, b_cout, data_operandB, {32{1\'b0}}, flipB);\n")
+f.write("cla_32 b_result(data_operandB_result, b_cout, maybe_flipped_B, {32{1\'b0}}, data_operandB[31]);\n")
 
 f.write("wire ")
 for i in range(31):
@@ -136,8 +132,6 @@ done_with_adding = False
 num = 0
 while (not done_with_adding):
 
-	print(wires)
-
 	# when equal to 32, we know to move on to use the cla adder to sum the two 64 bit numbers
 	num_satisfied_bits = 0
 
@@ -154,17 +148,12 @@ while (not done_with_adding):
 
 	for bitNum, wire_list in wires.items():
 		num_wires = len(wire_list)
-		# print("Total num_wires: "+str(num_wires)+" at bitNum: " +str(bitNum))
 		if num_wires < 3 and combine == 0:
-			# print("bitNum: "+str(bitNum)+" - num_wires: "+str(num_wires))
-			print("bitNum: "+str(bitNum))
 			operandA.append(wire_list[0])
 			if (num_wires == 1):
 				operandB.append("1'b0")
 			else:
 				operandB.append(wire_list[1])
-			print(len(operandA))
-			print(len(operandB))
 			num_satisfied_bits += 1
 			if num_satisfied_bits == 64:
 				done_with_adding = True
@@ -185,11 +174,6 @@ while (not done_with_adding):
 			num_half_adders = 1
 			
 		else:
-			# print("Updated num_wires: "+str(num_wires))
-			# print("Num full adders: "+str(num_full_adders))
-			# print("num: "+str(num))
-			# print(num_half_adders)
-
 			if bitNum > 60 and num == 0:
 				num_half_adders = 0
 				num_full_adders = 0
@@ -279,7 +263,6 @@ for i in range(60):
 	f.write("-")
 f.write("\n\n")
 
-# ADD MSB_DATA_RESULT HERE AGAIN!!!!!!!!!!!
 f.write("wire [31:0] msb_data_operandA, msb_data_operandB, msb_data_result;\n")
 f.write("wire msb_cout;\n\n")
 
@@ -305,21 +288,19 @@ f.write("\n\n")
 
 f.write("// Check for overflow by checking whether all msb 33 bits are the same\n")
 
-f.write("wire and_result, nor_result;\n")
+f.write("wire or_result, is_positive, ovf;\n")
 
-f.write("and and_overflow(and_result, ");
+f.write("or or_overflow(or_result, ")
 
-for i in range(31, -1, -1):
+for i in range(31, 0, -1):
 	f.write("msb_data_result["+str(i)+"], ")
-f.write("lsb_data_result["+str(31)+"]);\n\n")
+f.write("msb_data_result["+str(0)+"]);\n\n")
 
-f.write("nor nor_overflow(nor_result, ")
+f.write("xnor isPositive(is_positive, data_operandA[31], data_operandB[31]);\n\n")
 
-for i in range(31, -1, -1):
-	f.write("msb_data_result["+str(i)+"], ")
-f.write("lsb_data_result["+str(31)+"]);\n\n")
+f.write("and ovf_and(ovf, is_positive, temp_result[31]);\n")
 
-f.write("xnor exception(data_exception, and_result, nor_result);\n\n")
+f.write("or exception(data_exception, ovf, or_result);\n\n")
 
 # separator
 f.write("// ")
@@ -327,7 +308,7 @@ for i in range(60):
 	f.write("-")
 f.write("\n\n")
 
-f.write("// flip back if xor(flipA, flipB) == 1\n")
+f.write("// flip back if xor(data_operandA[31], data_operandB[31]) == 1\n")
 
 f.write("wire [31:0] flipped_result;\n")
 f.write("wire flipped_cout;\n\n")
@@ -336,7 +317,7 @@ f.write("cla_32 cla_flip(flipped_result, flipped_cout, ~temp_result, {32{1\'b0}}
 
 f.write("wire xor_result;\n")
 
-f.write("xor xor_flipped(xor_result, flipA, flipB);\n\n")
+f.write("xor xor_flipped(xor_result, data_operandA[31], data_operandB[31]);\n\n")
 
 f.write("assign data_result = xor_result ? flipped_result : temp_result;\n")
 
