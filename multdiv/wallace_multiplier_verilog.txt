@@ -7,13 +7,15 @@ output data_resultRDY, data_exception;
 assign data_resultRDY = 1'b1;
 
 // flip the sign if negative
-wire [31:0] maybe_flipped_A, maybe_flipped_B;
-assign maybe_flipped_A = data_operandA[31] ? ~data_operandA : data_operandA;
-assign maybe_flipped_B = data_operandB[31] ? ~data_operandB : data_operandB;
+wire flipA, flipB;
+assign flipA = data_operandA[31] ? 1'b1 : 1'b0;
+assign flipB = data_operandB[31] ? 1'b1 : 1'b0;
+assign data_operandA = flipA ? ~data_operandA : data_operandA;
+assign data_operandB = flipB ? ~data_operandB : data_operandB;
 wire [31:0] data_operandA_result, data_operandB_result;
 wire a_cout, b_cout;
-cla_32 a_result(data_operandA_result, a_cout, maybe_flipped_A, {32{1'b0}}, data_operandA[31]);
-cla_32 b_result(data_operandB_result, b_cout, maybe_flipped_B, {32{1'b0}}, data_operandB[31]);
+cla_32 a_result(data_operandA_result, a_cout, data_operandA, {32{1'b0}}, flipA);
+cla_32 b_result(data_operandB_result, b_cout, data_operandB, {32{1'b0}}, flipB);
 wire A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27, A28, A29, A30, A31;
 
 assign A0 = data_operandA_result[0];
@@ -5734,15 +5736,12 @@ cla_32 msb_cla(msb_data_result, msb_cout, msb_data_operandA, msb_data_operandB, 
 // ------------------------------------------------------------
 
 // Check for overflow by checking whether all msb 33 bits are the same
-wire or_result, is_positive, ovf;
+wire and_result, nor_result;
+and and_overflow(and_result, msb_data_result[31], msb_data_result[30], msb_data_result[29], msb_data_result[28], msb_data_result[27], msb_data_result[26], msb_data_result[25], msb_data_result[24], msb_data_result[23], msb_data_result[22], msb_data_result[21], msb_data_result[20], msb_data_result[19], msb_data_result[18], msb_data_result[17], msb_data_result[16], msb_data_result[15], msb_data_result[14], msb_data_result[13], msb_data_result[12], msb_data_result[11], msb_data_result[10], msb_data_result[9], msb_data_result[8], msb_data_result[7], msb_data_result[6], msb_data_result[5], msb_data_result[4], msb_data_result[3], msb_data_result[2], msb_data_result[1], msb_data_result[0], lsb_data_result[31]);
 
-or or_overflow(or_result, msb_data_result[31], msb_data_result[30], msb_data_result[29], msb_data_result[28], msb_data_result[27], msb_data_result[26], msb_data_result[25], msb_data_result[24], msb_data_result[23], msb_data_result[22], msb_data_result[21], msb_data_result[20], msb_data_result[19], msb_data_result[18], msb_data_result[17], msb_data_result[16], msb_data_result[15], msb_data_result[14], msb_data_result[13], msb_data_result[12], msb_data_result[11], msb_data_result[10], msb_data_result[9], msb_data_result[8], msb_data_result[7], msb_data_result[6], msb_data_result[5], msb_data_result[4], msb_data_result[3], msb_data_result[2], msb_data_result[1], msb_data_result[0]);
+nor nor_overflow(nor_result, msb_data_result[31], msb_data_result[30], msb_data_result[29], msb_data_result[28], msb_data_result[27], msb_data_result[26], msb_data_result[25], msb_data_result[24], msb_data_result[23], msb_data_result[22], msb_data_result[21], msb_data_result[20], msb_data_result[19], msb_data_result[18], msb_data_result[17], msb_data_result[16], msb_data_result[15], msb_data_result[14], msb_data_result[13], msb_data_result[12], msb_data_result[11], msb_data_result[10], msb_data_result[9], msb_data_result[8], msb_data_result[7], msb_data_result[6], msb_data_result[5], msb_data_result[4], msb_data_result[3], msb_data_result[2], msb_data_result[1], msb_data_result[0], lsb_data_result[31]);
 
-xnor isPositive(is_positive, data_operandA[31], data_operandB[31]);
-
-and ovf_and(ovf, is_positive, temp_result[31]); 
-
-or exception(data_exception, or_result, ovf);
+xnor exception(data_exception, and_result, nor_result);
 
 // ------------------------------------------------------------
 
@@ -5753,7 +5752,7 @@ wire flipped_cout;
 cla_32 cla_flip(flipped_result, flipped_cout, ~temp_result, {32{1'b0}}, 1'b1);
 
 wire xor_result;
-xor xor_flipped(xor_result, data_operandA[31], data_operandB[31]);
+xor xor_flipped(xor_result, flipA, flipB);
 
 assign data_result = xor_result ? flipped_result : temp_result;
 endmodule

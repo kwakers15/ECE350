@@ -11,6 +11,9 @@ module multdiv(
     output data_exception, data_resultRDY;
 
     // add your code here
-    wire [31:0] msb_data_result;
-    multiplier mult(data_result, msb_data_result, data_resultRDY, data_exception, data_operandA, data_operandB, clock);
+    wire [31:0] mult_result, div_result;
+    multiplier mult(mult_result, data_resultRDY, data_exception, data_operandA, data_operandB, clock);
+    // divider div(div_result, data_resultRDY, data_exception, data_operandA, data_operandB, clock);
+
+    assign data_result = mult_result;
 endmodule
