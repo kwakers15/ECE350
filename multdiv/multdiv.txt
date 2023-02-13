@@ -1,0 +1,10 @@
+cla_32.v
+dffe_ref.v
+divider.v
+full_adder.v
+half_adder.v
+multdiv_tb.v
+multdiv.v
+multiplier.v
+register32.v
+tff.v

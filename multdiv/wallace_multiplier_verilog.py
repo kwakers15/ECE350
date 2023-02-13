@@ -1,26 +1,50 @@
 f = open("wallace_multiplier_verilog.txt", "w+")
 
 # module declaration
-f.write("module multiplier(data_result, data_resultRDY, data_exception, data_operandA, data_operandB, clock);\n")
-f.write("input [31:0] data_operandA, data_operandB;\ninput clock;\noutput [31:0] data_result;\noutput data_resultRDY, data_exception;\n\n")
+f.write("module multiplier(data_result, data_resultRDY, data_exception, data_operandA, data_operandB, ctrl_MULT, ctrl_DIV, clock);\n")
+f.write("input [31:0] data_operandA, data_operandB;\ninput clock, ctrl_MULT, ctrl_DIV;\noutput [31:0] data_result;\noutput data_resultRDY, data_exception;\n\n")
 
-f.write("assign data_resultRDY = 1'b1;\n\n")
+f.write("// latch data operands when clk AND ctrl_MULT\n")
+f.write("wire [31:0] latched_data_A, latched_data_B;\n")
+f.write("register32 regA(latched_data_A, data_operandA, ctrl_MULT, 1'b0, clock);\n")
+f.write("register32 regB(latched_data_B, data_operandB, ctrl_MULT, 1'b0, clock);\n\n")
+
+
+f.write("// Wires for SR Latch and TFF counter\n")
+f.write("wire sr_out, sr_out_bar, sr_reset, tff_q0, tff_q1, tff_q2, tff_t2, three_count, four_count, five_count, tff_reset;\n\n")
+
+f.write("// SR latch for counter\n")
+f.write("and sr_three_count_and(three_count, ~tff_q2, tff_q1, tff_q0);\n")
+f.write("and sr_four_count_and(four_count, tff_q2, ~tff_q1, ~tff_q0);\n")
+f.write("and sr_five_count_and(five_count, tff_q2, ~tff_q1, tff_q0);\n")
+f.write("or sr_reset_or(sr_reset, five_count, ctrl_DIV);\n")
+f.write("nor sr_nor1(sr_out, sr_out_bar, sr_reset);\n")
+f.write("nor sr_not2(sr_out_bar, ctrl_MULT, sr_out);\n\n")
+
+f.write("// T flip flop counter\n")
+f.write("or tff_reset_or(tff_reset, five_count, ctrl_MULT, ctrl_DIV);\n")
+f.write("tff tff_0(tff_q0, 1'b1, clock, sr_out, tff_reset);\n")
+f.write("tff tff_1(tff_q1, tff_q0, clock, sr_out, tff_reset);\n")
+f.write("and tff_t2_and(tff_t2, tff_q1, tff_q0);\n")
+f.write("tff tff_2(tff_q2, tff_t2, clock, sr_out, tff_reset);\n\n")
+
+f.write("assign data_resultRDY = four_count;\n\n")
 
 f.write("// flip the sign if negative\n")
 
 f.write("wire [31:0] maybe_flipped_A, maybe_flipped_B;\n")
 
-f.write("assign maybe_flipped_A = data_operandA[31] ? ~data_operandA : data_operandA;\n")
+f.write("assign maybe_flipped_A = latched_data_A[31] ? ~latched_data_A : latched_data_A;\n")
 
-f.write("assign maybe_flipped_B = data_operandB[31] ? ~data_operandB : data_operandB;\n")
+f.write("assign maybe_flipped_B = latched_data_B[31] ? ~latched_data_B : latched_data_B;\n")
 
 f.write("wire [31:0] data_operandA_result, data_operandB_result;\n")
 
 f.write("wire a_cout, b_cout;\n")
 
-f.write("cla_32 a_result(data_operandA_result, a_cout, maybe_flipped_A, {32{1\'b0}}, data_operandA[31]);\n")
+f.write("cla_32 a_result(data_operandA_result, a_cout, maybe_flipped_A, {32{1\'b0}}, latched_data_A[31]);\n")
 
-f.write("cla_32 b_result(data_operandB_result, b_cout, maybe_flipped_B, {32{1\'b0}}, data_operandB[31]);\n")
+f.write("cla_32 b_result(data_operandB_result, b_cout, maybe_flipped_B, {32{1\'b0}}, latched_data_B[31]);\n")
 
 f.write("wire ")
 for i in range(31):
@@ -286,21 +310,25 @@ for i in range(60):
 	f.write("-")
 f.write("\n\n")
 
-f.write("// Check for overflow by checking whether all msb 33 bits are the same\n")
+f.write("// Check for overflow by checking whether all msb 32 bits are zero, or answer should be positive but leading bit is a 1\n")
 
-f.write("wire or_result, is_positive, ovf;\n")
+f.write("wire or_result, is_positive, ovf, temp_data_exception;\n")
 
-f.write("or or_overflow(or_result, ")
+# f.write("or or_overflow(or_result, ")
 
-for i in range(31, 0, -1):
-	f.write("msb_data_result["+str(i)+"], ")
-f.write("msb_data_result["+str(0)+"]);\n\n")
+# for i in range(31, 0, -1):
+# 	f.write("msb_data_result["+str(i)+"], ")
+# f.write("msb_data_result["+str(0)+"]);\n\n")
 
-f.write("xnor isPositive(is_positive, data_operandA[31], data_operandB[31]);\n\n")
+f.write("assign or_result = msb_data_result || {32{1'b0}} ? 1'b1 : 1'b0;\n")
+
+f.write("xnor isPositive(is_positive, latched_data_A[31], latched_data_B[31]);\n\n")
 
 f.write("and ovf_and(ovf, is_positive, temp_result[31]);\n")
 
-f.write("or exception(data_exception, ovf, or_result);\n\n")
+f.write("or exception(temp_data_exception, ovf, or_result);\n")
+
+f.write("dffe_ref dff(data_exception, temp_data_exception, clock, three_count, tff_reset);\n\n")
 
 # separator
 f.write("// ")
@@ -308,18 +336,20 @@ for i in range(60):
 	f.write("-")
 f.write("\n\n")
 
-f.write("// flip back if xor(data_operandA[31], data_operandB[31]) == 1\n")
+f.write("// flip back if xor(latched_data_A[31], latched_data_B[31]) == 1\n")
 
-f.write("wire [31:0] flipped_result;\n")
+f.write("wire [31:0] flipped_result, temp_data_result;\n")
 f.write("wire flipped_cout;\n\n")
 
 f.write("cla_32 cla_flip(flipped_result, flipped_cout, ~temp_result, {32{1\'b0}}, 1'b1);\n\n")
 
 f.write("wire xor_result;\n")
 
-f.write("xor xor_flipped(xor_result, data_operandA[31], data_operandB[31]);\n\n")
+f.write("xor xor_flipped(xor_result, latched_data_A[31], latched_data_B[31]);\n\n")
 
-f.write("assign data_result = xor_result ? flipped_result : temp_result;\n")
+f.write("assign temp_data_result = xor_result ? flipped_result : temp_result;\n")
+
+f.write("register32 reg_data_result(data_result, temp_data_result, three_count, tff_reset, clock);\n")
 
 f.write("endmodule")
 
