@@ -8,3 +8,5 @@ multdiv.v
 multiplier.v
 register32.v
 tff.v
+left_shifter_64.v
+
