@@ -132,7 +132,7 @@ module processor(
     or alu_inB_or(alu_inB, sw_op, lw_op, addi_op);
 
     // ALU ALWAYS ADDING IF NOT R-TYPE INSTRUCTION!!!
-    assign alu_opcode = R_op ? F_D_instr[6:2] : {5{1'b0}}:
+    assign alu_opcode = R_op ? F_D_instr[6:2] : {5{1'b0}};
 
     wire [31:0] ctrl_signals;
     assign ctrl_signals[21:0] = {22{1'b0}};
@@ -157,18 +157,43 @@ module processor(
     wire alu_not_equal, alu_less_than, alu_overflow;
     assign sx_immed[31:17] = D_X_instr[16] ? {15{1'b1}} : {15{1'b0}};
     assign sx_immed[16:0] = D_X_instr[16:0];
-    assign alu_operandB = ctrl_signals_out[27] ? sx_immed : reg_file_dataB;
-    alu cpu_ALU(.data_operandA(reg_file_dataA), .data_operandB(alu_operandB), .ctrl_ALUopcode(ctrl_signals_out[26:22]), .ctrl_shiftamt(D_X_instr[11:7]), .data_result(alu_output), .isNotEqual(alu_not_equal), .isLessThan(alu_less_than), .overflow(alu_overflow));
+    assign alu_operandB = D_X_ctrl[27] ? sx_immed : D_X_reg_file_dataB;
+    alu cpu_ALU(.data_operandA(reg_file_dataA), .data_operandB(alu_operandB), .ctrl_ALUopcode(D_X_ctrl[26:22]), .ctrl_shiftamt(D_X_instr[11:7]), .data_result(alu_output), .isNotEqual(alu_not_equal), .isLessThan(alu_less_than), .overflow(alu_overflow));
     // multdiv cpu_MULTDIV(.data_operandA(), .data_operandB(), .ctrl_MULT(), .ctrl_DIV(), .clock(), .data_result(), .data_exception(), .data_resultRDY());
 
-    wire [31:0] X_M_instr, X_M_PC, X_M_alu_out, X_M_reg_file_dataB;
+    wire [31:0] X_M_instr, X_M_PC, X_M_alu_out, X_M_reg_file_dataB, X_M_ctrl;
     register32 X_M_instr_reg(.out(X_M_instr), .in(D_X_instr), .in_enable(1'b1), .clr(reset), .clk(clock));
     register32 X_M_PC_reg(.out(X_M_PC), .in(D_X_PC), .in_enable(1'b1), .clr(reset), .clk(clock));
     register32 X_M_alu_out_reg(.out(X_M_alu_out), .in(alu_output), .in_enable(1'b1), .clr(reset), .clk(clock));
     register32 X_M_reg_file_dataB_reg(.out(X_M_reg_file_dataB), .in(D_X_reg_file_dataB), .in_enable(1'b1), .clr(reset), .clk(clock));
     register32 X_M_ctrl_reg(.out(X_M_ctrl), .in(D_X_ctrl), .in_enable(1'b1), .clr(reset), .clk(clock));
 
-    
+    assign wren = X_M_ctrl[28];
+    assign address_dmem = X_M_alu_out;
+    assign data = X_M_reg_file_dataB;
+
+    // -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    // M/W Pipeline (Memory / Write back)
+    wire [31:0] M_W_instr, M_W_PC, M_W_alu_out, M_W_memdata, M_W_ctrl;
+    register32 M_W_instr_reg(.out(M_W_instr), .in(X_M_instr), .in_enable(1'b1), .clr(reset), .clk(clock));
+    register32 M_W_PC_reg(.out(M_W_PC), .in(X_M_PC), .in_enable(1'b1), .clr(reset), .clk(clock));
+    register32 M_W_alu_out_reg(.out(M_W_alu_out), .in(X_M_alu_out), .in_enable(1'b1), .clr(reset), .clk(clock));
+    register32 M_W_memdata_reg(.out(M_W_memdata), .in(q_dmem), .in_enable(1'b1), .clr(reset), .clk(clock));
+    register32 M_W_ctrl_reg(.out(M_W_ctrl), .in(X_M_ctrl), .in_enable(1'b1), .clr(reset), .clk(clock));
+
+    assign ctrl_writeReg = M_W_instr[26:22];
+    // CHANGE TO BE 4-INPUT MUX LATER (TO INCLUDE SETX AND JAL INSTRUCTIONS)
+    assign data_writeReg = M_W_ctrl[30] ? M_W_memdata : M_W_alu_out;
+    assign ctrl_writeEnable = M_W_ctrl[29];
+
+
+
+
+
+
+
+
 	/* END CODE */
 
 endmodule
