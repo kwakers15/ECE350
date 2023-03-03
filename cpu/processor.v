@@ -83,8 +83,8 @@ module processor(
 
     // F/D Pipeline (Instruction Fetch / Decode)
     wire [31:0] F_D_instr, F_D_PC;
-    register32 F_D_instr_reg(.out(F_D_instr), .in(q_imem), .in_enable(1'b1), .clr(reset), .clk(clock));
-    register32 F_D_PC_reg(.out(F_D_PC), .in(PC_plus_1), .in_enable(1'b1), .clr(reset), .clk(clock));
+    register32 F_D_instr_reg(.out(F_D_instr), .in(q_imem), .in_enable(1'b1), .clr(reset), .clk(~clock));
+    register32 F_D_PC_reg(.out(F_D_PC), .in(PC_plus_1), .in_enable(1'b1), .clr(reset), .clk(~clock));
 
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -144,11 +144,11 @@ module processor(
 
     // instruction and pc registers for pipeline
     wire [31:0] D_X_instr, D_X_PC, reg_file_dataA, D_X_reg_file_dataB, D_X_ctrl;
-    register32 D_X_instr_reg(.out(D_X_instr), .in(F_D_instr), .in_enable(1'b1), .clr(reset), .clk(clock));
-    register32 D_X_PC_reg(.out(D_X_PC), .in(F_D_PC), .in_enable(1'b1), .clr(reset), .clk(clock));
-    register32 D_X_A_reg(.out(reg_file_dataA), .in(data_readRegA), .in_enable(1'b1), .clr(reset), .clk(clock));
-    register32 D_X_B_reg(.out(D_X_reg_file_dataB), .in(data_readRegB), .in_enable(1'b1), .clr(reset), .clk(clock));
-    register32 D_X_ctrl_reg(.out(D_X_ctrl), .in(ctrl_signals), .in_enable(1'b1), .clr(reset), .clk(clock));
+    register32 D_X_instr_reg(.out(D_X_instr), .in(F_D_instr), .in_enable(1'b1), .clr(reset), .clk(~clock));
+    register32 D_X_PC_reg(.out(D_X_PC), .in(F_D_PC), .in_enable(1'b1), .clr(reset), .clk(~clock));
+    register32 D_X_A_reg(.out(reg_file_dataA), .in(data_readRegA), .in_enable(1'b1), .clr(reset), .clk(~clock));
+    register32 D_X_B_reg(.out(D_X_reg_file_dataB), .in(data_readRegB), .in_enable(1'b1), .clr(reset), .clk(~clock));
+    register32 D_X_ctrl_reg(.out(D_X_ctrl), .in(ctrl_signals), .in_enable(1'b1), .clr(reset), .clk(~clock));
 
     // --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -162,11 +162,11 @@ module processor(
     // multdiv cpu_MULTDIV(.data_operandA(), .data_operandB(), .ctrl_MULT(), .ctrl_DIV(), .clock(), .data_result(), .data_exception(), .data_resultRDY());
 
     wire [31:0] X_M_instr, X_M_PC, X_M_alu_out, X_M_reg_file_dataB, X_M_ctrl;
-    register32 X_M_instr_reg(.out(X_M_instr), .in(D_X_instr), .in_enable(1'b1), .clr(reset), .clk(clock));
-    register32 X_M_PC_reg(.out(X_M_PC), .in(D_X_PC), .in_enable(1'b1), .clr(reset), .clk(clock));
-    register32 X_M_alu_out_reg(.out(X_M_alu_out), .in(alu_output), .in_enable(1'b1), .clr(reset), .clk(clock));
-    register32 X_M_reg_file_dataB_reg(.out(X_M_reg_file_dataB), .in(D_X_reg_file_dataB), .in_enable(1'b1), .clr(reset), .clk(clock));
-    register32 X_M_ctrl_reg(.out(X_M_ctrl), .in(D_X_ctrl), .in_enable(1'b1), .clr(reset), .clk(clock));
+    register32 X_M_instr_reg(.out(X_M_instr), .in(D_X_instr), .in_enable(1'b1), .clr(reset), .clk(~clock));
+    register32 X_M_PC_reg(.out(X_M_PC), .in(D_X_PC), .in_enable(1'b1), .clr(reset), .clk(~clock));
+    register32 X_M_alu_out_reg(.out(X_M_alu_out), .in(alu_output), .in_enable(1'b1), .clr(reset), .clk(~clock));
+    register32 X_M_reg_file_dataB_reg(.out(X_M_reg_file_dataB), .in(D_X_reg_file_dataB), .in_enable(1'b1), .clr(reset), .clk(~clock));
+    register32 X_M_ctrl_reg(.out(X_M_ctrl), .in(D_X_ctrl), .in_enable(1'b1), .clr(reset), .clk(~clock));
 
     assign wren = X_M_ctrl[28];
     assign address_dmem = X_M_alu_out;
@@ -176,11 +176,11 @@ module processor(
 
     // M/W Pipeline (Memory / Write back)
     wire [31:0] M_W_instr, M_W_PC, M_W_alu_out, M_W_memdata, M_W_ctrl;
-    register32 M_W_instr_reg(.out(M_W_instr), .in(X_M_instr), .in_enable(1'b1), .clr(reset), .clk(clock));
-    register32 M_W_PC_reg(.out(M_W_PC), .in(X_M_PC), .in_enable(1'b1), .clr(reset), .clk(clock));
-    register32 M_W_alu_out_reg(.out(M_W_alu_out), .in(X_M_alu_out), .in_enable(1'b1), .clr(reset), .clk(clock));
-    register32 M_W_memdata_reg(.out(M_W_memdata), .in(q_dmem), .in_enable(1'b1), .clr(reset), .clk(clock));
-    register32 M_W_ctrl_reg(.out(M_W_ctrl), .in(X_M_ctrl), .in_enable(1'b1), .clr(reset), .clk(clock));
+    register32 M_W_instr_reg(.out(M_W_instr), .in(X_M_instr), .in_enable(1'b1), .clr(reset), .clk(~clock));
+    register32 M_W_PC_reg(.out(M_W_PC), .in(X_M_PC), .in_enable(1'b1), .clr(reset), .clk(~clock));
+    register32 M_W_alu_out_reg(.out(M_W_alu_out), .in(X_M_alu_out), .in_enable(1'b1), .clr(reset), .clk(~clock));
+    register32 M_W_memdata_reg(.out(M_W_memdata), .in(q_dmem), .in_enable(1'b1), .clr(reset), .clk(~clock));
+    register32 M_W_ctrl_reg(.out(M_W_ctrl), .in(X_M_ctrl), .in_enable(1'b1), .clr(reset), .clk(~clock));
 
     assign ctrl_writeReg = M_W_instr[26:22];
     // CHANGE TO BE 4-INPUT MUX LATER (TO INCLUDE SETX AND JAL INSTRUCTIONS)
