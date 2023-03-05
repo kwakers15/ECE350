@@ -89,14 +89,14 @@ module processor(
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     // D/X Pipeline (Decode / Execute)
-    wire [4:0] opcode, rs, rt;
+    wire [4:0] opcode, rs, rt, rd;
     
     assign opcode = F_D_instr[31:27];
+    assign rd = F_D_instr[26:22];
     assign rs = F_D_instr[21:17];
     assign rt = F_D_instr[16:12];
 
-    assign ctrl_readRegA = rs;
-    assign ctrl_readRegB = rt;
+
 
     // decoding instruction to create control signals
     wire [31:0] operation;
@@ -114,9 +114,12 @@ module processor(
     assign bex_op = operation[22];
     assign setx_op = operation[21];
 
+    assign ctrl_readRegA = rs;
+    assign ctrl_readRegB = sw_op ? rd : rt;
+
 
     wire [1:0] reg_write_data;
-    wire reg_we, dmem_we, alu_inB;
+    wire reg_we, dmem_we, alu_inB, exception;
     wire [4:0] alu_opcode;
     
     or reg_we_or(reg_we, R_op, addi_op, lw_op, jal_op, setx_op);
@@ -135,7 +138,12 @@ module processor(
     assign alu_opcode = R_op ? F_D_instr[6:2] : {5{1'b0}};
 
     wire [31:0] ctrl_signals;
-    assign ctrl_signals[21:0] = {22{1'b0}};
+    assign ctrl_signals[15:0] = {16{1'b0}};
+    // JUST A REMINDER THAT THESE ARE THE BITS TO BE SIGN EXTENDED AND PUT INTO RSTATUS ON EXCEPTION!!!
+    assign ctrl_signals[18:16] = {3{1'b0}};
+    assign ctrl_signals[19] = 1'b0;
+    assign ctrl_signals[20] = addi_op;
+    assign ctrl_signals[21] = R_op;
     assign ctrl_signals[26:22] = alu_opcode;
     assign ctrl_signals[27] = alu_inB;
     assign ctrl_signals[28] = dmem_we;
@@ -161,12 +169,26 @@ module processor(
     alu cpu_ALU(.data_operandA(reg_file_dataA), .data_operandB(alu_operandB), .ctrl_ALUopcode(D_X_ctrl[26:22]), .ctrl_shiftamt(D_X_instr[11:7]), .data_result(alu_output), .isNotEqual(alu_not_equal), .isLessThan(alu_less_than), .overflow(alu_overflow));
     // multdiv cpu_MULTDIV(.data_operandA(), .data_operandB(), .ctrl_MULT(), .ctrl_DIV(), .clock(), .data_result(), .data_exception(), .data_resultRDY());
 
+    wire [31:0] excep_added_ctrl;
+    assign excep_added_ctrl[31:20] = D_X_ctrl[31:20];
+    assign excep_added_ctrl[15:0] = {16{1'b0}};
+    wire alu_op;
+    assign alu_op = D_X_ctrl[21] || D_X_ctrl[20];
+    and excep_add(excep_added_ctrl[19], alu_overflow, alu_op);
+    wire mult_or_div, addi_or_sub, add_or_sub_or_div;
+    assign mult_or_div = D_X_ctrl[21] && ((D_X_instr[6:2] == 5'b00110) || (D_X_instr[6:2] == 5'b00111));
+    assign addi_or_sub = D_X_ctrl[20] || (D_X_ctrl[21] && (D_X_instr[6:2] == 5'b00001));
+    assign add_or_sub_or_div = D_X_ctrl[21] && ((D_X_instr[6:2] == 5'b00111) || (D_X_instr[6:2] == 5'b00001) || (D_X_instr[6:2] == 5'b00000));
+    assign excep_added_ctrl[18] = excep_added_ctrl[19] && mult_or_div;
+    assign excep_added_ctrl[17] = excep_added_ctrl[19] && addi_or_sub;
+    assign excep_added_ctrl[16] = excep_added_ctrl[19] && add_or_sub_or_div;
+
     wire [31:0] X_M_instr, X_M_PC, X_M_alu_out, X_M_reg_file_dataB, X_M_ctrl;
     register32 X_M_instr_reg(.out(X_M_instr), .in(D_X_instr), .in_enable(1'b1), .clr(reset), .clk(~clock));
     register32 X_M_PC_reg(.out(X_M_PC), .in(D_X_PC), .in_enable(1'b1), .clr(reset), .clk(~clock));
     register32 X_M_alu_out_reg(.out(X_M_alu_out), .in(alu_output), .in_enable(1'b1), .clr(reset), .clk(~clock));
     register32 X_M_reg_file_dataB_reg(.out(X_M_reg_file_dataB), .in(D_X_reg_file_dataB), .in_enable(1'b1), .clr(reset), .clk(~clock));
-    register32 X_M_ctrl_reg(.out(X_M_ctrl), .in(D_X_ctrl), .in_enable(1'b1), .clr(reset), .clk(~clock));
+    register32 X_M_ctrl_reg(.out(X_M_ctrl), .in(excep_added_ctrl), .in_enable(1'b1), .clr(reset), .clk(~clock));
 
     assign wren = X_M_ctrl[28];
     assign address_dmem = X_M_alu_out;
@@ -182,13 +204,33 @@ module processor(
     register32 M_W_memdata_reg(.out(M_W_memdata), .in(q_dmem), .in_enable(1'b1), .clr(reset), .clk(~clock));
     register32 M_W_ctrl_reg(.out(M_W_ctrl), .in(X_M_ctrl), .in_enable(1'b1), .clr(reset), .clk(~clock));
 
-    assign ctrl_writeReg = M_W_instr[26:22];
+    // USING 4-INPUT MUX TO CHOOSE WHETHER TO WRITE TO r31, r30, or RD
+    wire [31:0] dummy_ctrl_writeReg, dummy_M_W_instr, dummy_r31, dummy_r30;
+    assign dummy_M_W_instr[31:5] = {27{1'b0}};
+    assign dummy_M_W_instr[4:0] = M_W_instr[26:22];
+    assign dummy_r31[31:5] = {27{1'b0}};
+    assign dummy_r31[4:0] = 5'b11111;
+    assign dummy_r30[31:5] = {27{1'b0}};
+    assign dummy_r30[4:0] = 5'b11110;
+    wire [1:0] writeCtrl;
+    assign writeCtrl = M_W_ctrl[19] ? 2'b11 : M_W_ctrl[31:30];
+    mux_4 ctrl_writeReg_mux(dummy_ctrl_writeReg, writeCtrl, dummy_M_W_instr, dummy_M_W_instr, dummy_r31, dummy_r30);
+    assign ctrl_writeReg = dummy_ctrl_writeReg[4:0];
+
     // CHANGE TO BE 4-INPUT MUX LATER (TO INCLUDE SETX AND JAL INSTRUCTIONS)
-    assign data_writeReg = M_W_ctrl[30] ? M_W_memdata : M_W_alu_out;
+    wire [31:0] dummy_PC_plus_1, target, status;
+    wire [2:0] data_writeCtrl;
+    assign status[31:3] = {29{1'b0}};
+    assign status[2:0] = M_W_ctrl[18:16];
+    assign dummy_PC_plus_1 = {32{1'b0}};
+    assign target[31:27] = {5{1'b0}};
+    assign target[26:0] = M_W_instr[26:0];
+    assign data_writeCtrl[2] = M_W_ctrl[19];
+    assign data_writeCtrl[1:0] = M_W_ctrl[31:30];
+    mux_8 data_writeReg_mux(.out(data_writeReg), .select(data_writeCtrl), .in0(M_W_alu_out), .in1(M_W_memdata), .in2(dummy_PC_plus_1), .in3(target), .in4(status), .in5(status), .in6(status), .in7(status));
     assign ctrl_writeEnable = M_W_ctrl[29];
 
-
-
+    
 
 
 
