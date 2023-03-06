@@ -35,8 +35,8 @@ assign maybe_flipped_A = latched_data_A[31] ? ~latched_data_A : latched_data_A;
 assign maybe_flipped_B = latched_data_B[31] ? ~latched_data_B : latched_data_B;
 wire [31:0] data_operandA_result, data_operandB_result;
 wire a_cout, b_cout;
-cla_32 a_result(data_operandA_result, a_cout, maybe_flipped_A, {32{1'b0}}, latched_data_A[31]);
-cla_32 b_result(data_operandB_result, b_cout, maybe_flipped_B, {32{1'b0}}, latched_data_B[31]);
+multdiv_cla_32 a_result(data_operandA_result, a_cout, maybe_flipped_A, {32{1'b0}}, latched_data_A[31]);
+multdiv_cla_32 b_result(data_operandB_result, b_cout, maybe_flipped_B, {32{1'b0}}, latched_data_B[31]);
 wire A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27, A28, A29, A30, A31;
 
 assign A0 = data_operandA_result[0];
@@ -5679,7 +5679,7 @@ assign lsb_data_operandB[2] = sum_2_0_0;
 assign lsb_data_operandB[1] = A0B1;
 assign lsb_data_operandB[0] = 1'b0;
 wire [31:0] temp_result;
-cla_32 lsb_cla(temp_result, lsb_cout, lsb_data_operandA, lsb_data_operandB, 1'b0);
+multdiv_cla_32 lsb_cla(temp_result, lsb_cout, lsb_data_operandA, lsb_data_operandB, 1'b0);
 
 // ------------------------------------------------------------
 
@@ -5752,7 +5752,7 @@ assign msb_data_operandB[3] = sum_35_0_7;
 assign msb_data_operandB[2] = sum_34_0_7;
 assign msb_data_operandB[1] = sum_33_0_7;
 assign msb_data_operandB[0] = sum_32_0_7;
-cla_32 msb_cla(msb_data_result, msb_cout, msb_data_operandA, msb_data_operandB, lsb_cout);
+multdiv_cla_32 msb_cla(msb_data_result, msb_cout, msb_data_operandA, msb_data_operandB, lsb_cout);
 
 // ------------------------------------------------------------
 
@@ -5771,7 +5771,7 @@ dffe_ref dff(data_exception, temp_data_exception, clock, three_count, tff_reset)
 wire [31:0] flipped_result, temp_data_result;
 wire flipped_cout;
 
-cla_32 cla_flip(flipped_result, flipped_cout, ~temp_result, {32{1'b0}}, 1'b1);
+multdiv_cla_32 cla_flip(flipped_result, flipped_cout, ~temp_result, {32{1'b0}}, 1'b1);
 
 wire xor_result;
 xor xor_flipped(xor_result, latched_data_A[31], latched_data_B[31]);

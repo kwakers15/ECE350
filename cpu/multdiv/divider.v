@@ -46,8 +46,8 @@ dffe_ref dff(div_exception, temp_div_exception, clock, thirty_four_count, tff_re
 wire [31:0] negative_A, negative_B;
 wire [31:0] data_operandA_result, data_operandB_result;
 wire a_cout, b_cout;
-cla_32 a_result(negative_A, a_cout, ~latched_data_A, {32{1'b0}}, 1'b1);
-cla_32 b_result(negative_B, b_cout, ~latched_data_B, {32{1'b0}}, 1'b1);
+multdiv_cla_32 a_result(negative_A, a_cout, ~latched_data_A, {32{1'b0}}, 1'b1);
+multdiv_cla_32 b_result(negative_B, b_cout, ~latched_data_B, {32{1'b0}}, 1'b1);
 assign data_operandA_result = latched_data_A[31] ? negative_A : latched_data_A;
 assign data_operandB_result = latched_data_B[31] ? negative_B : latched_data_B;
 
@@ -67,7 +67,7 @@ register32 reg_remainder(remainder_out, remainder_in, ~zero_count, ctrl_DIV, clo
 register32 reg_result(result_out, result_in, ~zero_count, ctrl_DIV, clock);
 left_shifter_64 ls_64(remainder_out, result_out, ls_remainder_out, ls_result_out);
 assign M_or_negativeM = ctrl_ADD ? M : negative_M;
-cla_32 result_cla(alu_result, cout_remainder, M_or_negativeM, ls_remainder_out, 1'b0);
+multdiv_cla_32 result_cla(alu_result, cout_remainder, M_or_negativeM, ls_remainder_out, 1'b0);
 assign remainder_in = one_count ? {32{1'b0}} : alu_result;
 assign result_in[0] = one_count ? data_operandA_result[0] : (alu_result[31] ? 1'b0 : 1'b1);
 assign result_in[31:1] = one_count ? data_operandA_result[31:1] : ls_result_out[31:1];
@@ -76,7 +76,7 @@ assign result_in[31:1] = one_count ? data_operandA_result[31:1] : ls_result_out[
 
 wire [31:0] negative_result;
 wire negative_result_cout;
-cla_32 negative_result_cla(negative_result, negative_result_cout, ~result_out, {32{1'b0}}, 1'b1);
+multdiv_cla_32 negative_result_cla(negative_result, negative_result_cout, ~result_out, {32{1'b0}}, 1'b1);
 
 wire result_is_negative;
 xor result_is_negative_xor(result_is_negative, latched_data_A[31], latched_data_B[31]);

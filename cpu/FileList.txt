@@ -45,3 +45,10 @@ alu/and/and_32.v
 alu/add/cla_tb.v
 alu/add/cla_32.v
 alu/or/or_32.v
+multdiv/multdiv_cla_32.v
+comparator/eight_comparator.v
+comparator/thirty_two_comparator.v
+comparator/two_bit_comparator.v
+comparator/comp_mux_2.v
+comparator/comp_mux_4.v
+comparator/comp_mux_8.v
