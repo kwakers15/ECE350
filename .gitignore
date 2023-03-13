@@ -1,4 +1,4 @@
-/alu/mac_intel
-/alu/Provided\ Behavioral\ Components
-/alu/Test\ Files
+cpu/mac_intel
+cpu/Provided\ Behavioral\ Components
+cpu/Test\ Files
 .DS_Store
