@@ -115,6 +115,10 @@ module VGAController(
 		.dataOut(colorData),				       // Color at current pixel
 		.wEn(1'b0)); 						       // We're always reading
 	
+		RAM #(
+			.DEPTH(36),
+			.DATA_WIDTH()
+		)
 
 	// Assign to output color from register if active
 	wire[BITS_PER_COLOR-1:0] colorOut; 			  // Output color 
