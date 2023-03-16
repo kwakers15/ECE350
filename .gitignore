@@ -2,3 +2,5 @@ cpu/mac_intel
 cpu/Provided\ Behavioral\ Components
 cpu/Test\ Files
 .DS_Store
+cpu/.DS_Store
+cpu/proc
