@@ -310,11 +310,21 @@ module processor(
     alu cpu_ALU(.data_operandA(alu_multdiv_inputA), .data_operandB(alu_multdiv_inputB), .ctrl_ALUopcode(D_X_ctrl[25:21]), .ctrl_shiftamt(D_X_instr[11:7]), .data_result(alu_output), .isNotEqual(alu_not_equal), .isLessThan(alu_less_than), .overflow(alu_overflow));
     multdiv cpu_MULTDIV(.data_operandA(alu_multdiv_inputA), .data_operandB(alu_multdiv_inputB), .ctrl_MULT(D_X_ctrl[15]), .ctrl_DIV(D_X_ctrl[14]), .clock(clock), .data_result(multdiv_output), .data_exception(multdiv_exception), .data_resultRDY(resultRDY));
 
-    wire [31:0] P_W_product, P_W_ctrl, P_W_instr;
-    wire P_W_multdiv;
-    register32 P_W_product_reg(.out(P_W_product), .in(multdiv_output), .in_enable(resultRDY), .clr(reset), .clk(~clock));
+    wire [31:0] P_W_product, P_W_ctrl, P_W_instr, P_W_product_in, multdiv_status;
+    wire P_W_multdiv, P_W_excep;
+
+    // SR latch for mult/div op
+    wire multdiv_op_out, multdiv_op_out_bar;
+    assign multdiv_status = multdiv_op_out ? 32'b00000000000000000000000000000100 : 32'b00000000000000000000000000000101;
+    nor multdiv_op_nor1(multdiv_op_out, multdiv_op_out_bar, D_X_ctrl[14]);
+    nor multdiv_op_nor2(multdiv_op_out_bar, D_X_ctrl[15], multdiv_op_out);
+
+    assign P_W_product_in = multdiv_exception ? multdiv_status : multdiv_output;
+    register32 P_W_product_reg(.out(P_W_product), .in(P_W_product_in), .in_enable(resultRDY), .clr(reset), .clk(~clock));
     register32 P_W_ctrl_reg(.out(P_W_ctrl), .in(D_X_ctrl), .in_enable(~P_W_multdiv), .clr(reset), .clk(~clock));
     register32 P_W_instr_reg(P_W_instr, D_X_instr, ~P_W_multdiv, reset, ~clock);
+    dffe_ref P_W_excep_reg(.q(P_W_excep), .d(multdiv_exception), .clk(~clock), .en(1'b1), .clr(~resultRDY));
+    
     assign P_W_multdiv = D_X_instr == nop;
 
     wire [31:0] excep_added_ctrl;
@@ -365,7 +375,7 @@ module processor(
     assign dummy_r30[31:5] = {27{1'b0}};
     assign dummy_r30[4:0] = 5'b11110;
     mux_8 ctrl_writeReg_mux(dummy_ctrl_writeReg, M_W_ctrl[31:29], dummy_M_W_instr, dummy_M_W_instr, dummy_r31, dummy_r30, dummy_r30, dummy_M_W_instr, dummy_M_W_instr, dummy_M_W_instr);
-    assign ctrl_writeReg = dummy_ctrl_writeReg[4:0];
+    assign ctrl_writeReg = P_W_excep ? 5'b11110 : dummy_ctrl_writeReg[4:0];
 
     // CHANGE TO BE 4-INPUT MUX LATER (TO INCLUDE SETX AND JAL INSTRUCTIONS)
     wire [31:0] target, status;
